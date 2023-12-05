@@ -1,5 +1,0 @@
-com/github/cfrg/aegis/Aegis128L.class
-com/github/cfrg/aegis/Aegis256.class
-com/github/cfrg/aegis/VerificationFailedException.class
-com/github/cfrg/aegis/AuthenticatedCiphertext.class
-com/github/cfrg/aegis/AesBlock.class
