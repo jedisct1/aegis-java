@@ -21,6 +21,18 @@ public class Aegis256 {
         return key;
     }
 
+    /**
+     * Generates a random 256-bit nonce using a secure random number generator.
+     *
+     * @return the generated nonce as a byte array
+     */
+    public static byte[] noncegen() {
+        var key = new byte[32];
+        var rng = new SecureRandom();
+        rng.nextBytes(key);
+        return key;
+    }
+
     AesBlock state[] = new AesBlock[6];
 
     int tag_length;
@@ -243,8 +255,8 @@ public class Aegis256 {
         var s = this.state;
         var bytes = new byte[16];
 
-        final long ad_len = ad_len_bytes * 8;
-        final long msg_len = msg_len_bytes * 8;
+        final long ad_len = (long) ad_len_bytes * 8;
+        final long msg_len = (long) msg_len_bytes * 8;
 
         bytes[0 * 8 + 0] = (byte) (ad_len >> 0);
         bytes[0 * 8 + 1] = (byte) (ad_len >> 8);

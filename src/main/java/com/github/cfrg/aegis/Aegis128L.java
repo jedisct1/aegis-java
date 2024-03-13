@@ -21,6 +21,18 @@ public class Aegis128L {
         return key;
     }
 
+    /**
+     * Generates a random 128-bit nonce using a secure random number generator.
+     *
+     * @return the generated key as a byte array
+     */
+    public static byte[] noncegen() {
+        var key = new byte[16];
+        var rng = new SecureRandom();
+        rng.nextBytes(key);
+        return key;
+    }
+
     AesBlock state[] = new AesBlock[8];
 
     int tag_length;
@@ -217,8 +229,8 @@ public class Aegis128L {
 
     protected void absorb(byte ai[]) {
         assert ai.length == 32;
-        final var t0 = new AesBlock(Arrays.copyOfRange(ai, 0, 32));
-        final var t1 = new AesBlock(Arrays.copyOfRange(ai, 32, 64));
+        final var t0 = new AesBlock(Arrays.copyOfRange(ai, 0, 16));
+        final var t1 = new AesBlock(Arrays.copyOfRange(ai, 16, 32));
         this.update(t0, t1);
     }
 
@@ -227,8 +239,8 @@ public class Aegis128L {
         var s = this.state;
         final var z0 = s[6].xor(s[1]).xor(s[2].and(s[3]));
         final var z1 = s[2].xor(s[5]).xor(s[6].and(s[7]));
-        final var t0 = new AesBlock(Arrays.copyOfRange(xi, 0, 32));
-        final var t1 = new AesBlock(Arrays.copyOfRange(xi, 32, 64));
+        final var t0 = new AesBlock(Arrays.copyOfRange(xi, 0, 16));
+        final var t1 = new AesBlock(Arrays.copyOfRange(xi, 16, 32));
         final var out0_bytes = t0.xor(z0).toBytes();
         final var out1_bytes = t1.xor(z1).toBytes();
         this.update(t0, t1);
@@ -247,8 +259,8 @@ public class Aegis128L {
         var s = this.state;
         final var z0 = s[6].xor(s[1]).xor(s[2].and(s[3]));
         final var z1 = s[2].xor(s[5]).xor(s[6].and(s[7]));
-        final var t0 = new AesBlock(Arrays.copyOfRange(ci, 0, 32));
-        final var t1 = new AesBlock(Arrays.copyOfRange(ci, 32, 64));
+        final var t0 = new AesBlock(Arrays.copyOfRange(ci, 0, 16));
+        final var t1 = new AesBlock(Arrays.copyOfRange(ci, 16, 32));
         final var out0 = t0.xor(z0);
         final var out1 = t1.xor(z1);
         this.update(out0, out1);
@@ -274,8 +286,8 @@ public class Aegis128L {
         for (var i = 0; i < cn.length; i++) {
             pad[i] = cn[i];
         }
-        final var t0 = new AesBlock(Arrays.copyOfRange(pad, 0, 32));
-        final var t1 = new AesBlock(Arrays.copyOfRange(pad, 32, 64));
+        final var t0 = new AesBlock(Arrays.copyOfRange(pad, 0, 16));
+        final var t1 = new AesBlock(Arrays.copyOfRange(pad, 16, 32));
         final var out0_bytes = t0.xor(z0).toBytes();
         final var out1_bytes = t1.xor(z1).toBytes();
         for (var i = 0; i < 16; i++) {
@@ -291,8 +303,8 @@ public class Aegis128L {
         for (var i = cn.length; i < 32; i++) {
             pad[i] = 0;
         }
-        final var v0 = new AesBlock(Arrays.copyOfRange(pad, 0, 32));
-        final var v1 = new AesBlock(Arrays.copyOfRange(pad, 32, 64));
+        final var v0 = new AesBlock(Arrays.copyOfRange(pad, 0, 16));
+        final var v1 = new AesBlock(Arrays.copyOfRange(pad, 16, 32));
         this.update(v0, v1);
 
         return xn;
@@ -302,8 +314,8 @@ public class Aegis128L {
         var s = this.state;
         var bytes = new byte[16];
 
-        final long ad_len = ad_len_bytes * 8;
-        final long msg_len = msg_len_bytes * 8;
+        final long ad_len = (long) ad_len_bytes * 8;
+        final long msg_len = (long) msg_len_bytes * 8;
 
         bytes[0 * 8 + 0] = (byte) (ad_len >> 0);
         bytes[0 * 8 + 1] = (byte) (ad_len >> 8);
