@@ -149,12 +149,7 @@ public class Aegis256 {
             }
         }
         if (ac.ct.length % 16 != 0) {
-            var pad = new byte[16];
-            Arrays.fill(pad, (byte) 0);
-            for (var j = 0; j < ac.ct.length % 16; j++) {
-                pad[j] = ac.ct[i + j];
-            }
-            var xi = this.decLast(pad);
+            var xi = this.decLast(Arrays.copyOfRange(ac.ct, i, ac.ct.length));
             for (var j = 0; j < ac.ct.length % 16; j++) {
                 msg[i + j] = xi[j];
             }

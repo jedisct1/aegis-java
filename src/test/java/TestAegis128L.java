@@ -1,6 +1,9 @@
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+
+import java.util.Arrays;
+
 import com.github.cfrg.aegis.Aegis128L;
 import com.github.cfrg.aegis.VerificationFailedException;
 
@@ -25,7 +28,7 @@ public class TestAegis128L {
     public void roundTripAttached() throws VerificationFailedException {
         final var key = Aegis128L.keygen();
         final var nonce = Aegis128L.noncegen();
-        final var plaintext = "0123456789abcdef0123456789ABCDEF".getBytes();
+        final var plaintext = "0123456789abcdef0123456789ABCDE".getBytes();
         final var ad = "Additional data".getBytes();
 
         var aegis = new Aegis128L(key, nonce, 16);

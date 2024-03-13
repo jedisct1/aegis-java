@@ -25,7 +25,7 @@ public class TestAegis256 {
     public void roundTripAttached() throws VerificationFailedException {
         final var key = Aegis256.keygen();
         final var nonce = Aegis256.noncegen();
-        final var plaintext = "0123456789abcdef0123456789ABCDEF".getBytes();
+        final var plaintext = "0123456789abcdef0123456789ABCDE".getBytes();
         final var ad = "Additional data".getBytes();
 
         var aegis = new Aegis256(key, nonce, 16);
