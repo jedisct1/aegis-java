@@ -83,36 +83,40 @@ public class Aegis128L {
     public AuthenticatedCiphertext encryptDetached(final byte msg[], final byte ad[]) {
         var ciphertext = new byte[msg.length];
         var i = 0;
-        for (; i + 32 <= ad.length; i += 32) {
-            this.absorb(Arrays.copyOfRange(ad, i, i + 32));
-        }
-        if (ad.length % 32 != 0) {
-            var pad = new byte[32];
-            Arrays.fill(pad, (byte) 0);
-            for (var j = 0; j < ad.length % 32; j++) {
-                pad[i] = ad[i + j];
+        if (ad != null) {
+            for (; i + 32 <= ad.length; i += 32) {
+                this.absorb(Arrays.copyOfRange(ad, i, i + 32));
             }
-            this.absorb(pad);
-        }
-        i = 0;
-        for (; i + 32 <= msg.length; i += 32) {
-            var ci = this.enc(Arrays.copyOfRange(msg, i, i + 32));
-            for (var j = 0; j < 32; j++) {
-                ciphertext[i + j] = ci[j];
+            if (ad.length % 32 != 0) {
+                var pad = new byte[32];
+                Arrays.fill(pad, (byte) 0);
+                for (var j = 0; j < ad.length % 32; j++) {
+                    pad[i] = ad[i + j];
+                }
+                this.absorb(pad);
             }
         }
-        if (msg.length % 32 != 0) {
-            var pad = new byte[32];
-            Arrays.fill(pad, (byte) 0);
-            for (var j = 0; j < msg.length % 32; j++) {
-                pad[j] = msg[i + j];
+        if (msg != null) {
+            i = 0;
+            for (; i + 32 <= msg.length; i += 32) {
+                var ci = this.enc(Arrays.copyOfRange(msg, i, i + 32));
+                for (var j = 0; j < 32; j++) {
+                    ciphertext[i + j] = ci[j];
+                }
             }
-            var ci = this.enc(pad);
-            for (var j = 0; j < msg.length % 32; j++) {
-                ciphertext[i + j] = ci[j];
+            if (msg.length % 32 != 0) {
+                var pad = new byte[32];
+                Arrays.fill(pad, (byte) 0);
+                for (var j = 0; j < msg.length % 32; j++) {
+                    pad[j] = msg[i + j];
+                }
+                var ci = this.enc(pad);
+                for (var j = 0; j < msg.length % 32; j++) {
+                    ciphertext[i + j] = ci[j];
+                }
             }
         }
-        final var tag = this.finalize(ad.length, msg.length);
+        final var tag = this.finalize(ad == null ? 0 : ad.length, msg == null ? 0 : msg.length);
 
         return new AuthenticatedCiphertext(ciphertext, tag);
     }
@@ -146,19 +150,21 @@ public class Aegis128L {
      */
     public byte[] decryptDetached(final AuthenticatedCiphertext ac, final byte ad[])
             throws VerificationFailedException {
-        var msg = new byte[ac.ct.length];
         var i = 0;
-        for (; i + 32 <= ad.length; i += 32) {
-            this.absorb(Arrays.copyOfRange(ad, i, i + 32));
-        }
-        if (ad.length % 32 != 0) {
-            var pad = new byte[32];
-            Arrays.fill(pad, (byte) 0);
-            for (var j = 0; j < ad.length % 32; j++) {
-                pad[i] = ad[i + j];
+        if (ad != null) {
+            for (; i + 32 <= ad.length; i += 32) {
+                this.absorb(Arrays.copyOfRange(ad, i, i + 32));
             }
-            this.absorb(pad);
+            if (ad.length % 32 != 0) {
+                var pad = new byte[32];
+                Arrays.fill(pad, (byte) 0);
+                for (var j = 0; j < ad.length % 32; j++) {
+                    pad[i] = ad[i + j];
+                }
+                this.absorb(pad);
+            }
         }
+        var msg = new byte[ac.ct.length];
         i = 0;
         for (; i + 32 <= ac.ct.length; i += 32) {
             var xi = this.dec(Arrays.copyOfRange(ac.ct, i, i + 32));
@@ -172,7 +178,7 @@ public class Aegis128L {
                 msg[i + j] = xi[j];
             }
         }
-        final var tag = this.finalize(ad.length, msg.length);
+        final var tag = this.finalize(ad == null ? 0 : ad.length, msg == null ? 0 : msg.length);
         var dt = (byte) 0;
         for (var j = 0; j < tag.length; j++) {
             dt |= tag[j] ^ ac.tag[j];

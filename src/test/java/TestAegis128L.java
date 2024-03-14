@@ -2,8 +2,6 @@
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
-import java.util.Arrays;
-
 import com.github.cfrg.aegis.Aegis128L;
 import com.github.cfrg.aegis.VerificationFailedException;
 
