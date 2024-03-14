@@ -27,17 +27,17 @@ public class Aegis256 {
      * @return the generated nonce as a byte array
      */
     public static byte[] noncegen() {
-        var key = new byte[32];
+        var nonce = new byte[32];
         var rng = new SecureRandom();
-        rng.nextBytes(key);
-        return key;
+        rng.nextBytes(nonce);
+        return nonce;
     }
 
-    AesBlock state[] = new AesBlock[6];
+    AesBlock[] state = new AesBlock[6];
 
     int tag_length;
 
-    public Aegis256(final byte key[], final byte nonce[], final int tag_length) throws InvalidParameterException {
+    public Aegis256(final byte[] key, final byte[] nonce, final int tag_length) throws InvalidParameterException {
         if (tag_length != 16 && tag_length != 32) {
             throw new InvalidParameterException("invalid tag length");
         }
@@ -49,9 +49,9 @@ public class Aegis256 {
         }
         this.tag_length = tag_length;
 
-        final byte c0_bytes[] = { 0x00, 0x01, 0x01, 0x02, 0x03, 0x05, 0x08, 0x0d, 0x15, 0x22, 0x37, 0x59, 0x90 - 256,
+        final byte[] c0_bytes = { 0x00, 0x01, 0x01, 0x02, 0x03, 0x05, 0x08, 0x0d, 0x15, 0x22, 0x37, 0x59, 0x90 - 256,
                 0xe9 - 256, 0x79, 0x62 };
-        final byte c1_bytes[] = { 0xdb - 256, 0x3d, 0x18, 0x55, 0x6d, 0xc2 - 256, 0x2f, 0xf1 - 256, 0x20, 0x11, 0x31,
+        final byte[] c1_bytes = { 0xdb - 256, 0x3d, 0x18, 0x55, 0x6d, 0xc2 - 256, 0x2f, 0xf1 - 256, 0x20, 0x11, 0x31,
                 0x42, 0x73, 0xb5 - 256, 0x28, 0xdd - 256 };
         final AesBlock c0 = new AesBlock(c0_bytes);
         final AesBlock c1 = new AesBlock(c1_bytes);
@@ -77,7 +77,7 @@ public class Aegis256 {
         }
     }
 
-    public AuthenticatedCiphertext encryptDetached(final byte msg[], final byte ad[]) {
+    public AuthenticatedCiphertext encryptDetached(final byte[] msg, final byte[] ad) {
         var ciphertext = new byte[msg.length];
         var i = 0;
         if (ad != null) {
@@ -113,12 +113,12 @@ public class Aegis256 {
                 }
             }
         }
-        final var tag = this.finalize(ad == null ? 0 : ad.length, msg == null ? 0 : msg.length);
+        final var tag = this.mac(ad == null ? 0 : ad.length, msg == null ? 0 : msg.length);
 
         return new AuthenticatedCiphertext(ciphertext, tag);
     }
 
-    public byte[] encrypt(final byte msg[], final byte ad[]) {
+    public byte[] encrypt(final byte[] msg, final byte[] ad) {
         var res = this.encryptDetached(msg, ad);
         var ciphertext = new byte[res.ct.length + res.tag.length];
         for (var i = 0; i < res.ct.length; i++) {
@@ -130,7 +130,7 @@ public class Aegis256 {
         return ciphertext;
     }
 
-    public byte[] decryptDetached(final AuthenticatedCiphertext ac, final byte ad[])
+    public byte[] decryptDetached(final AuthenticatedCiphertext ac, final byte[] ad)
             throws VerificationFailedException {
         var i = 0;
         if (ad != null) {
@@ -160,7 +160,7 @@ public class Aegis256 {
                 msg[i + j] = xi[j];
             }
         }
-        final var tag = this.finalize(ad == null ? 0 : ad.length, msg == null ? 0 : msg.length);
+        final var tag = this.mac(ad == null ? 0 : ad.length, msg == null ? 0 : msg.length);
         var dt = (byte) 0;
         for (var j = 0; j < tag.length; j++) {
             dt |= tag[j] ^ ac.tag[j];
@@ -171,7 +171,7 @@ public class Aegis256 {
         return msg;
     }
 
-    public byte[] decrypt(final byte ciphertext[], final byte ad[]) throws VerificationFailedException {
+    public byte[] decrypt(final byte[] ciphertext, final byte[] ad) throws VerificationFailedException {
         if (ciphertext.length < this.tag_length) {
             throw new VerificationFailedException("truncated ciphertext");
         }
@@ -198,13 +198,13 @@ public class Aegis256 {
         s[0] = s[0].xor(m);
     }
 
-    protected void absorb(byte ai[]) {
+    protected void absorb(byte[] ai) {
         assert ai.length == 16;
         final var t = new AesBlock(ai);
         this.update(t);
     }
 
-    protected byte[] enc(byte xi[]) {
+    protected byte[] enc(byte[] xi) {
         assert xi.length == 16;
         var s = this.state;
         final var z = s[1].xor(s[4]).xor(s[5]).xor(s[2].and(s[3]));
@@ -214,15 +214,14 @@ public class Aegis256 {
         return ci;
     }
 
-    protected byte[] dec(byte ci[]) {
+    protected byte[] dec(byte[] ci) {
         assert ci.length == 16;
         var s = this.state;
         final var z = s[1].xor(s[4]).xor(s[5]).xor(s[2].and(s[3]));
         final var t = new AesBlock(ci);
         final var out = t.xor(z);
         this.update(out);
-        final var xi = out.toBytes();
-        return xi;
+        return out.toBytes();
     }
 
     protected byte[] decLast(byte cn[]) {
@@ -252,7 +251,7 @@ public class Aegis256 {
         return xn;
     }
 
-    protected byte[] finalize(final int ad_len_bytes, final int msg_len_bytes) {
+    protected byte[] mac(final int ad_len_bytes, final int msg_len_bytes) {
         var s = this.state;
         var bytes = new byte[16];
 
