@@ -91,7 +91,7 @@ public class Aegis128L {
                 var pad = new byte[32];
                 Arrays.fill(pad, (byte) 0);
                 for (var j = 0; j < ad.length % 32; j++) {
-                    pad[i] = ad[i + j];
+                    pad[j] = ad[i + j];
                 }
                 this.absorb(pad);
             }
@@ -159,7 +159,7 @@ public class Aegis128L {
                 var pad = new byte[32];
                 Arrays.fill(pad, (byte) 0);
                 for (var j = 0; j < ad.length % 32; j++) {
-                    pad[i] = ad[i + j];
+                    pad[j] = ad[i + j];
                 }
                 this.absorb(pad);
             }
